@@ -75,7 +75,7 @@ const CreateTaskModal = ({ open, onClose, onSubmit, handleEdit, onDelete, isLoad
                 setIsEditMode(false);
             }
         };
-    }, [open]);
+    }, [open, setTaskToEdit]);
 
     return (
         <Dialog fullScreen={fullScreen} open={open} onClose={onClose} aria-labelledby="responsive-dialog-title">
