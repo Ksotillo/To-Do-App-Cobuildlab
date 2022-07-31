@@ -14,6 +14,15 @@ import useSWR, { mutate } from "swr";
 
 const ColumnComponent = dynamic(() => import('components/Column'), { ssr: false });
 
+
+/**
+ * Allows to reorder the columns by updating the tasksIds order
+ *
+ * @param {Column} sourceCol
+ * @param {number} startIndex
+ * @param {number} endIndex
+ * @return {*}  {Column}
+ */
 const reorderColumnList = (sourceCol: Column, startIndex: number, endIndex: number): Column => {
 	const newTaskIds = Array.from(sourceCol.taskIds);
 	const [removed] = newTaskIds.splice(startIndex, 1);
