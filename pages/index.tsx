@@ -86,7 +86,7 @@ const Home: NextPage = () => {
 	const [requestError, setRequestError] = useState<unknown>(null);
 	const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
 	const [taskToEdit, setTaskToEdit] = useState<Task | undefined>();
-	console.log(user)
+
 	useEffect(() => {
         if (tasks && tasks.tasksList && tasks.tasksList.items) {
             const tasksList = tasks.tasksList.items;
