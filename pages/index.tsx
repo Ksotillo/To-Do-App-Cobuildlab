@@ -1,5 +1,5 @@
 import { Add } from '@mui/icons-material'
-import { Alert, AppBar, Box, Button, Fab, Grid, Snackbar, useTheme } from '@mui/material'
+import { Alert, Box, Fab, Grid, Snackbar, useTheme } from '@mui/material'
 import CreateTaskModal from 'components/CreateTaskModal'
 import { useUser } from "@auth0/nextjs-auth0";
 
@@ -7,7 +7,6 @@ import { Column, Task } from 'model'
 import type { NextPage } from 'next'
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
-import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { DragDropContext, DropResult } from 'react-beautiful-dnd'
 import TopBar from 'components/Topbar';
