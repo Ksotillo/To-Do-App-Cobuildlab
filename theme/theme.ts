@@ -51,6 +51,13 @@ const themeLight: ThemeOptions = {
             defaultProps: {
                 color: "inherit",
             }
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    boxShadow: "none",
+                }
+            }
         }
     },
 };
@@ -93,6 +100,13 @@ const themeDark: ThemeOptions = {
                 color: "inherit",
             },
         },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    boxShadow: "none",
+                }
+            }
+        }
     },
 };
 

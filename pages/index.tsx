@@ -1,8 +1,8 @@
 import { Add } from '@mui/icons-material'
-import { AppBar, Box, Fab, Grid, useTheme } from '@mui/material'
-import ThemeSwitch from 'components/ThemeSwitch'
+import { AppBar, Box, Button, Fab, Grid, useTheme } from '@mui/material'
+import CreateTaskModal from 'components/CreateTaskModal'
+import { useUser } from "@auth0/nextjs-auth0";
 
-import { ThemeMode, useAppContext } from 'context/AppContext'
 import { Column, Task } from 'model'
 import type { NextPage } from 'next'
 import dynamic from 'next/dynamic'
@@ -10,7 +10,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useState } from 'react'
 import { DragDropContext, DropResult } from 'react-beautiful-dnd'
-import styles from '../styles/Home.module.css'
+import TopBar from 'components/Topbar';
 
 const ColumnComponent = dynamic(() => import('components/Column'), { ssr: false });
 
@@ -37,38 +37,74 @@ const initialData: {
     columnOrder: string[];
 } = {
     tasks: {
-        1: { id: 1, content: "Configure Next.js application" },
-        2: { id: 2, content: "Configure Next.js and tailwind " },
-        3: { id: 3, content: "Create sidebar navigation menu" },
-        4: { id: 4, content: "Create page footer" },
-        5: { id: 5, content: "Create page navigation menu" },
-        6: { id: 6, content: "Create page layout" },
+        1: { id: 1, content: "Configure Next.js application", status: "next" },
+        2: { id: 2, content: "Configure Next.js and tailwind ", status: "next" },
+        3: { id: 3, content: "Create sidebar navigation menu", status: "next" },
+        4: { id: 4, content: "Create page footer", status: "next" },
+        5: { id: 5, content: "Create page navigation menu", status: "next" },
+        6: { id: 6, content: "Create page layout", status: "next" },
     },
     columns: {
-        "column-1": {
-            id: "column-1",
+        "next": {
+            id: "next",
             title: "Next",
             taskIds: [1, 2, 3, 4, 5, 6],
         },
-        "column-2": {
-            id: "column-2",
+        "in-progress": {
+            id: "in-progress",
             title: "In Progress",
             taskIds: [],
         },
-        "column-3": {
-            id: "column-3",
+        "completed": {
+            id: "completed",
             title: "Completed",
             taskIds: [],
         },
     },
     // Facilitate reordering of the columns
-    columnOrder: ["column-1", "column-2", "column-3"],
+    columnOrder: ["next", "in-progress", "completed"],
 };
 
 const Home: NextPage = () => {
 	const theme = useTheme();
-	const { toggleColorMode } = useAppContext()
+  	const { user, error, isLoading } = useUser();
 	const [state, setState] = useState(initialData);
+	const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
+	const [taskToEdit, setTaskToEdit] = useState<Task | undefined>();
+
+	const toggleCreateTaskModal = () => setCreateTaskModalOpen(!createTaskModalOpen);
+
+	const handleEdit = (taskToEdit: Task | undefined) => {
+		setTaskToEdit(taskToEdit);
+		toggleCreateTaskModal();
+	}
+
+	const onSubmitTask = (task: Task) => {
+		let newTaskId = task.id;
+		let newTask = task;
+		let newTasksIds = state.columns[task.status].taskIds;
+
+		if (!task.id) {
+			newTaskId = Object.keys(state.tasks).length + 1;
+			newTask = { ...task, id: newTaskId };
+			newTasksIds = [...newTasksIds, newTaskId];
+		}
+		const newTasks = { ...state.tasks, [newTaskId!]: newTask };
+		const newColumn = { ...state.columns[task.status], taskIds: newTasksIds };
+		const newColumns = { ...state.columns, [task.status]: newColumn };
+		setState({ ...state, tasks: newTasks, columns: newColumns });
+		toggleCreateTaskModal();
+	}
+
+	const onDeleteTask = (task: Task) => {
+		const newTasksIds = state.columns[task.status].taskIds.filter((id) => id !== task.id);
+		const newColumn = { ...state.columns[task.status], taskIds: newTasksIds };
+		const newColumns = { ...state.columns, [task.status]: newColumn };
+		const newTasks = { ...state.tasks };
+		delete newTasks[task.id!];
+		setState({ ...state, tasks: newTasks, columns: newColumns });
+		toggleCreateTaskModal();
+	}
 
 	const onDragEnd = (result: DropResult) => {
 		const { destination, source } = result;
@@ -114,8 +150,11 @@ const Home: NextPage = () => {
 			taskIds: endTaskIds,
 		};
 
+		const newTasks = { ...state.tasks, [removed]: { ...state.tasks[removed], status: destination.droppableId as Task["status"] } };
+
 		const newState = {
 			...state,
+			tasks: newTasks,
 			columns: {
 				...state.columns,
 				[newStartCol.id]: newStartCol,
@@ -125,6 +164,7 @@ const Home: NextPage = () => {
 
 		setState(newState);
 	};
+	console.log(user)
 	return (
         <Box>
             <Head>
@@ -132,14 +172,7 @@ const Home: NextPage = () => {
                 <meta name="description" content="The best way to organize yourself" />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-            <AppBar position="static">
-                <Box px={[theme.spacing(2), theme.spacing(4), theme.spacing(6), theme.spacing(8)]} display="flex" justifyContent={"space-between"} alignItems="center">
-                    <h2>
-                        <span style={{ fontSize: "32px" }}>✓</span> Task Management
-                    </h2>
-					<ThemeSwitch isDark={theme.palette.mode === ThemeMode.dark} onChange={toggleColorMode} />
-                </Box>
-            </AppBar>
+            <TopBar />
             <Box component="main">
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Box p={theme.spacing(4)} maxWidth="1200px" margin="0 auto">
@@ -148,16 +181,23 @@ const Home: NextPage = () => {
                                 const column = state.columns[columnId];
                                 const tasks = column.taskIds.map((taskId) => state.tasks[taskId]);
 
-                                return <ColumnComponent key={column.id} column={column} tasks={tasks} />;
+                                return <ColumnComponent key={column.id} column={column} tasks={tasks} handleEdit={handleEdit} />;
                             })}
                         </Grid>
                     </Box>
                 </DragDropContext>
-				<Box position="absolute" right={"5%"} bottom={"5%"}>
-					<Fab color="primary" aria-label="add">
-						<Add/>
-					</Fab>
-				</Box>
+                <Box position="absolute" right={"5%"} bottom={"5%"}>
+                    <Fab color="primary" aria-label="add" onClick={toggleCreateTaskModal}>
+                        <Add />
+                    </Fab>
+                </Box>
+                <CreateTaskModal
+                    handleEdit={{ taskToEdit, setTaskToEdit }}
+                    open={createTaskModalOpen}
+                    onClose={toggleCreateTaskModal}
+                    onSubmit={onSubmitTask}
+                    onDelete={onDeleteTask}
+                />
             </Box>
         </Box>
     );

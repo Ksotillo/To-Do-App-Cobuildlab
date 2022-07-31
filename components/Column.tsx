@@ -1,19 +1,16 @@
 import { Draggable, Droppable } from "react-beautiful-dnd";
-import { Grid, Typography, useTheme, Box } from "@mui/material";
+import { Grid, Typography, useTheme, Box, IconButton } from "@mui/material";
 import { Column, Task } from "model";
+import { Edit } from "@mui/icons-material";
 
 type ColumnProps = {
     column: Column;
     tasks: Task[];
+    handleEdit: (task: Task | undefined) => void;
 };
 
-const ColumnComponent = ({ column, tasks }: ColumnProps) => {
+const ColumnComponent = ({ column, tasks, handleEdit }: ColumnProps) => {
     const theme = useTheme();
-
-    const calculateRotation = ({ x, y }: { x: number; y: number }) => {
-        console.log(x, y);
-        return "rotate(30deg)";
-    };
 
     return (
         <Grid width="33%" flexDirection={"column"}>
@@ -47,14 +44,24 @@ const ColumnComponent = ({ column, tasks }: ColumnProps) => {
                                     <Grid
                                         mb="1rem"
                                         p="1.5rem"
+                                        pr="2rem"
+                                        position="relative"
                                         bgcolor={theme.palette.background.paper}
-                                        sx={{ transition: "box-shadow .3s ease-in-out" }}
+                                        sx={{
+                                            transition: "box-shadow .3s ease-in-out",
+                                            ":hover": { [`.edit-task-${task.id}`]: { opacity: 1, transition: "all .2s ease-in-out" } },
+                                        }}
                                         boxShadow={draggableSnapshot.isDragging ? "0px 32px 49px -30px rgba(0,0,0,0.3)" : "unset"}
                                         ref={draggableProvided.innerRef}
                                         {...draggableProvided.draggableProps}
                                         {...draggableProvided.dragHandleProps}
                                     >
                                         <Typography>{task.content}</Typography>
+                                        <Box className={`edit-task-${task.id}`} sx={{ opacity: 0, transition: "all .2s ease-in-out" }} position="absolute" top="10px" right="10px">
+                                            <IconButton color="primary" sx={{ fontSize: "12px" }} onClick={() => handleEdit(task)}>
+                                                <Edit fontSize="inherit" />
+                                            </IconButton>
+                                        </Box>
                                     </Grid>
                                 )}
                             </Draggable>
