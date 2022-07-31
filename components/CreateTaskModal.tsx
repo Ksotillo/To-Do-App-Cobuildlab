@@ -42,6 +42,13 @@ const selectOptions = [
 
 const initialForm = { content: "", status: "" };
 
+
+/**
+ * Renders a modal to create or edit a task
+ *
+ * @param {Props} { open, onClose, onSubmit, handleEdit, onDelete, isLoading }
+ * @return {*} 
+ */
 const CreateTaskModal = ({ open, onClose, onSubmit, handleEdit, onDelete, isLoading }: Props) => {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("md"));

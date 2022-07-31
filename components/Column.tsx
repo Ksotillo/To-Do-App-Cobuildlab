@@ -11,6 +11,13 @@ type ColumnProps = {
     isLoading: boolean;
 };
 
+
+/**
+ * Renders a column with its tasks
+ *
+ * @param {ColumnProps} { column, tasks, handleEdit, isLoading }
+ * @return {*} 
+ */
 const ColumnComponent = ({ column, tasks, handleEdit, isLoading }: ColumnProps) => {
     const theme = useTheme();
 

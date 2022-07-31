@@ -5,6 +5,12 @@ import { useUser } from "@auth0/nextjs-auth0";
 import { ThemeMode, useAppContext } from "context/AppContext";
 import Link from "next/link";
 
+
+/**
+ * Topbar component
+ *
+ * @return {*} 
+ */
 const TopBar = () => {
     const theme = useTheme();
     const { user, error, isLoading } = useUser();

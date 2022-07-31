@@ -21,6 +21,16 @@ query {
 }
 `;
 
+
+/**
+ * Get all tasks for the specified user.
+ * 
+ *
+ * @export
+ * @param {NextApiRequest} req
+ * @param {NextApiResponse} res
+ * @return {*} 
+ */
 export default async function getTasks(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "POST") {
         try {

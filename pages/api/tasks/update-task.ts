@@ -21,6 +21,15 @@ mutation {
 }
 `;
 
+
+/**
+ * Updates a task
+ *
+ * @export
+ * @param {NextApiRequest} req
+ * @param {NextApiResponse} res
+ * @return {*} 
+ */
 export default async function updateTask(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "PUT") {
         try {

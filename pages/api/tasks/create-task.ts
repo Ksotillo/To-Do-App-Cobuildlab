@@ -21,6 +21,15 @@ mutation {
 }
 `;
 
+
+/**
+ * Creates a task
+ *
+ * @export
+ * @param {NextApiRequest} req
+ * @param {NextApiResponse} res
+ * @return {*} 
+ */
 export default async function createTask(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "POST") {
         try {
