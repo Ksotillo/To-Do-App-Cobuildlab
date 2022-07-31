@@ -12,6 +12,7 @@ import { useTheme } from "@mui/material/styles";
 import { MenuItem, TextField } from "@mui/material";
 import { Task } from "model";
 import { Delete } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
 
 interface Props {
     open: boolean;
@@ -22,6 +23,7 @@ interface Props {
         taskToEdit: Task | undefined;
         setTaskToEdit: (task: Task | undefined) => void;
     }
+    isLoading: boolean;
 }
 
 const selectOptions = [
@@ -41,7 +43,7 @@ const selectOptions = [
 
 const initialForm = { content: "", status: "" };
 
-const CreateTaskModal = ({ open, onClose, onSubmit, handleEdit, onDelete }: Props) => {
+const CreateTaskModal = ({ open, onClose, onSubmit, handleEdit, onDelete, isLoading }: Props) => {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
     const { taskToEdit, setTaskToEdit } = handleEdit;
@@ -111,9 +113,9 @@ const CreateTaskModal = ({ open, onClose, onSubmit, handleEdit, onDelete }: Prop
                 <Button autoFocus onClick={onClose} variant="outlined">
                     Cancel
                 </Button>
-                <Button disabled={!isValid} onClick={handleSubmit} autoFocus variant="contained">
+                <LoadingButton disabled={!isValid} onClick={handleSubmit} autoFocus variant="contained" loading={isLoading}>
                     {isEditMode ? "Save" : "Create"}
-                </Button>
+                </LoadingButton>
             </DialogActions>
         </Dialog>
     );

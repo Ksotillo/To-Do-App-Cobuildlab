@@ -1,0 +1,29 @@
+import { Task } from "model";
+import { NextApiRequest, NextApiResponse } from "next/types";
+import { client } from "../client";
+
+const CREATE_MANY_TASKS = (data: Array<{ content: string, status: Task["status"], user: { connect: { email: string } } }>) => `
+mutation {
+    taskCreateMany(
+        data: ${JSON.stringify(data)}) {
+    		count
+    }
+}
+`;
+
+export default async function createTask(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method === "POST") {
+        try {
+            let { tasks, email } = JSON.parse(req.body);
+            console.log(tasks)
+            tasks = tasks.map((task: Task) => ({ content: task.content, status: task.status, user: { connect: { email } } }));
+            let result = await client.request(CREATE_MANY_TASKS(tasks));
+            console.log(result, "result");
+            return res.status(200).json(result);
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+    return res.status(405).json({ message: "Method not allowed" });
+}

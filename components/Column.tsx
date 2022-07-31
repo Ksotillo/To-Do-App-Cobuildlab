@@ -2,15 +2,19 @@ import { Draggable, Droppable } from "react-beautiful-dnd";
 import { Grid, Typography, useTheme, Box, IconButton } from "@mui/material";
 import { Column, Task } from "model";
 import { Edit } from "@mui/icons-material";
+import Placeholder from "./CardPlaceholder";
 
 type ColumnProps = {
     column: Column;
     tasks: Task[];
     handleEdit: (task: Task | undefined) => void;
+    isLoading: boolean;
 };
 
-const ColumnComponent = ({ column, tasks, handleEdit }: ColumnProps) => {
+const ColumnComponent = ({ column, tasks, handleEdit, isLoading }: ColumnProps) => {
     const theme = useTheme();
+
+    const getRandomArray = () => Array(Math.floor(Math.random() * 5) + 2).fill(0);
 
     return (
         <Grid width="33%" flexDirection={"column"}>
@@ -38,7 +42,14 @@ const ColumnComponent = ({ column, tasks, handleEdit }: ColumnProps) => {
             <Droppable droppableId={column.id}>
                 {(droppableProvided, droppableSnapshot) => (
                     <Grid px="1.5rem" flexDirection="column" ref={droppableProvided.innerRef} {...droppableProvided.droppableProps}>
-                        {tasks.map((task, index) => (
+                        {isLoading ? 
+                            getRandomArray().map((_, index) => (
+                                <Grid key={index} mb="1rem">
+                                    <Placeholder  />
+                                </Grid>
+                            ))
+                        :
+                        tasks.map((task, index) => (
                             <Draggable key={task.id} draggableId={`${task.id}`} index={index}>
                                 {(draggableProvided, draggableSnapshot) => (
                                     <Grid

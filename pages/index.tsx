@@ -1,5 +1,5 @@
 import { Add } from '@mui/icons-material'
-import { AppBar, Box, Button, Fab, Grid, useTheme } from '@mui/material'
+import { Alert, AppBar, Box, Button, Fab, Grid, Snackbar, useTheme } from '@mui/material'
 import CreateTaskModal from 'components/CreateTaskModal'
 import { useUser } from "@auth0/nextjs-auth0";
 
@@ -8,9 +8,10 @@ import type { NextPage } from 'next'
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DragDropContext, DropResult } from 'react-beautiful-dnd'
 import TopBar from 'components/Topbar';
+import useSWR, { mutate } from "swr";
 
 const ColumnComponent = dynamic(() => import('components/Column'), { ssr: false });
 
@@ -37,18 +38,18 @@ const initialData: {
     columnOrder: string[];
 } = {
     tasks: {
-        1: { id: 1, content: "Configure Next.js application", status: "next" },
-        2: { id: 2, content: "Configure Next.js and tailwind ", status: "next" },
-        3: { id: 3, content: "Create sidebar navigation menu", status: "next" },
-        4: { id: 4, content: "Create page footer", status: "next" },
-        5: { id: 5, content: "Create page navigation menu", status: "next" },
-        6: { id: 6, content: "Create page layout", status: "next" },
+        // 1: { id: 1, content: "Configure Next.js application", status: "next" },
+        // 2: { id: 2, content: "Configure Next.js and tailwind ", status: "next" },
+        // 3: { id: 3, content: "Create sidebar navigation menu", status: "next" },
+        // 4: { id: 4, content: "Create page footer", status: "next" },
+        // 5: { id: 5, content: "Create page navigation menu", status: "next" },
+        // 6: { id: 6, content: "Create page layout", status: "next" },
     },
     columns: {
         "next": {
             id: "next",
             title: "Next",
-            taskIds: [1, 2, 3, 4, 5, 6],
+            taskIds: []//[1, 2, 3, 4, 5, 6],
         },
         "in-progress": {
             id: "in-progress",
@@ -67,10 +68,65 @@ const initialData: {
 
 const Home: NextPage = () => {
 	const theme = useTheme();
-  	const { user, error, isLoading } = useUser();
+  	const { user, error: userError, isLoading } = useUser();
+	const { data: tasks, error } = useSWR("/api/tasks/get-tasks", (url) =>
+        fetch(url, { method: "POST", body: JSON.stringify({ email: user && user.name }) }).then((res) => res.json())
+    );
 	const [state, setState] = useState(initialData);
+	const [loadingRequest, setLoadingRequest] = useState(false)
+	const [snackbarOpen, setSnackbarOpen] = useState(true);
+	const [requestError, setRequestError] = useState<unknown>(null);
 	const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
 	const [taskToEdit, setTaskToEdit] = useState<Task | undefined>();
+	console.log(tasks, state);
+	console.log(user, "Aaaaaaaaaa")
+
+	useEffect(() => {
+        if (tasks && tasks.tasksList && tasks.tasksList.items) {
+            const tasksList = tasks.tasksList.items;
+            const newTasks = tasksList.reduce((acc: { [key: string]: Task }, task: Task) => {
+                acc[task.id!] = task;
+                return acc;
+            }, {});
+            setState((prevState) => ({
+                ...prevState,
+                tasks: newTasks,
+                columns: {
+                    ...prevState.columns,
+                    next: {
+                        ...prevState.columns["next"],
+                        taskIds: tasksList.filter((task: Task) => task.status === "next").map((task: Task) => task.id),
+                    },
+                    "in-progress": {
+                        ...prevState.columns["in-progress"],
+                        taskIds: tasksList.filter((task: Task) => task.status === "in-progress").map((task: Task) => task.id),
+                    },
+                    completed: {
+                        ...prevState.columns["completed"],
+                        taskIds: tasksList.filter((task: Task) => task.status === "completed").map((task: Task) => task.id),
+                    },
+                },
+            }));
+        }
+    }, [tasks]);
+
+	useEffect(() => {
+		if (user) {
+			createUser()
+			mutate("/api/tasks/get-tasks");
+		}
+	}, [user])
+
+	useEffect(() => {
+		if (!user) {
+			localStorage.setItem("tasks", JSON.stringify(state.tasks))
+		}
+	}, [state.tasks])
+
+	useEffect(() => {
+		if (error) setRequestError(error)
+		if (userError) setRequestError(userError);
+	}, [error, userError])
 
 	const toggleCreateTaskModal = () => setCreateTaskModalOpen(!createTaskModalOpen);
 
@@ -79,30 +135,62 @@ const Home: NextPage = () => {
 		toggleCreateTaskModal();
 	}
 
-	const onSubmitTask = (task: Task) => {
-		let newTaskId = task.id;
-		let newTask = task;
-		let newTasksIds = state.columns[task.status].taskIds;
+	const onSubmitTask = async (task: Task) => {
+		try {
+			let newTaskId = task.id;
+			let newTask = task;
+			let newTasksIds = state.columns[task.status].taskIds;
 
-		if (!task.id) {
-			newTaskId = Object.keys(state.tasks).length + 1;
-			newTask = { ...task, id: newTaskId };
-			newTasksIds = [...newTasksIds, newTaskId];
+			if (!task.id) {
+				setLoadingRequest(true);
+				newTaskId = Object.keys(state.tasks).length + 1;
+				if (user) {
+					const response = await fetch("/api/tasks/create-task", {
+						method: "POST",
+						body: JSON.stringify({ ...task, email: user && user.name }),
+					});
+					const { taskCreate } = await response.json();
+					newTaskId = taskCreate.id;
+				}
+				newTask = { ...task, id: newTaskId };
+				newTasksIds = [...newTasksIds, newTaskId!];
+				setLoadingRequest(false);
+			} else if (user) {
+				fetch("/api/tasks/update-task", {
+					method: "PUT",
+					body: JSON.stringify({ ...task, email: user && user.name }),
+				});
+			}
+			const newTasks = { ...state.tasks, [newTaskId!]: newTask };
+			const newColumn = { ...state.columns[task.status], taskIds: newTasksIds };
+			const newColumns = { ...state.columns, [task.status]: newColumn };
+			setState({ ...state, tasks: newTasks, columns: newColumns });
+		} catch (error) {
+			console.log(error);
+			setRequestError(error);
 		}
-		const newTasks = { ...state.tasks, [newTaskId!]: newTask };
-		const newColumn = { ...state.columns[task.status], taskIds: newTasksIds };
-		const newColumns = { ...state.columns, [task.status]: newColumn };
-		setState({ ...state, tasks: newTasks, columns: newColumns });
+
 		toggleCreateTaskModal();
 	}
 
 	const onDeleteTask = (task: Task) => {
-		const newTasksIds = state.columns[task.status].taskIds.filter((id) => id !== task.id);
-		const newColumn = { ...state.columns[task.status], taskIds: newTasksIds };
-		const newColumns = { ...state.columns, [task.status]: newColumn };
-		const newTasks = { ...state.tasks };
-		delete newTasks[task.id!];
-		setState({ ...state, tasks: newTasks, columns: newColumns });
+		try {
+			const newTasksIds = state.columns[task.status].taskIds.filter((id) => id !== task.id);
+			const newColumn = { ...state.columns[task.status], taskIds: newTasksIds };
+			const newColumns = { ...state.columns, [task.status]: newColumn };
+			const newTasks = { ...state.tasks };
+			delete newTasks[task.id!];
+			setState({ ...state, tasks: newTasks, columns: newColumns });
+			if (user) {
+				fetch("/api/tasks/delete-task", {
+					method: "DELETE",
+					body: JSON.stringify({ id: task.id }),
+				});
+			}
+		} catch (error) {
+			console.log(error);
+			setRequestError(error);
+		}
 		toggleCreateTaskModal();
 	}
 
@@ -164,7 +252,21 @@ const Home: NextPage = () => {
 
 		setState(newState);
 	};
-	console.log(user)
+
+	const createUser = async () => {
+		try {
+			const res = await fetch(`/api/create-user`, {
+				method: "POST",
+				body: JSON.stringify({
+					email: user && user.name,
+				}),
+			});
+		} catch (error) {
+			console.log(error)
+			setRequestError(error);
+		}
+	}
+
 	return (
         <Box>
             <Head>
@@ -181,7 +283,7 @@ const Home: NextPage = () => {
                                 const column = state.columns[columnId];
                                 const tasks = column.taskIds.map((taskId) => state.tasks[taskId]);
 
-                                return <ColumnComponent key={column.id} column={column} tasks={tasks} handleEdit={handleEdit} />;
+                                return <ColumnComponent key={column.id} column={column} tasks={tasks} handleEdit={handleEdit} isLoading={!tasks} />;
                             })}
                         </Grid>
                     </Box>
@@ -197,7 +299,18 @@ const Home: NextPage = () => {
                     onClose={toggleCreateTaskModal}
                     onSubmit={onSubmitTask}
                     onDelete={onDeleteTask}
+                    isLoading={loadingRequest}
                 />
+                <Snackbar open={snackbarOpen && !user} onClose={() => setSnackbarOpen(false)}>
+                    <Alert severity="info" onClose={() => setSnackbarOpen(false)}>
+                        Tip: Login to save your tasks!
+                    </Alert>
+                </Snackbar>
+                <Snackbar open={!!requestError} onClose={() => setRequestError(null)}>
+                    <Alert severity="error" onClose={() => setRequestError(null)}>
+                        Error: Something went wrong!
+                    </Alert>
+                </Snackbar>
             </Box>
         </Box>
     );
