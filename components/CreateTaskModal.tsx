@@ -77,7 +77,7 @@ const CreateTaskModal = ({ open, onClose, onSubmit, handleEdit, onDelete, isLoad
         return () => {
             if (!open) {
                 setForm(initialForm);
-                setTaskToEdit(undefined);
+                // setTaskToEdit(undefined);
                 setIsEditMode(false);
             }
         };

@@ -169,6 +169,8 @@ const Home: NextPage = () => {
             let newTaskId = task.id;
             let newTask = task;
             let newTasksIds = state.columns[task.status].taskIds;
+			let prevStatusNewTaskIds;
+			let prevNewColumn;
 
             if (!task.id) {
                 setLoadingRequest(true);
@@ -184,15 +186,24 @@ const Home: NextPage = () => {
                 newTask = { ...task, id: newTaskId };
                 newTasksIds = [...newTasksIds, newTaskId!];
                 setLoadingRequest(false);
-            } else if (user) {
-                fetch("/api/tasks/update-task", {
-                    method: "PUT",
-                    body: JSON.stringify({ ...task, email: user && user.email }),
-                });
+            } else {
+                newTasksIds = [...newTasksIds, task.id!];
+				prevStatusNewTaskIds = state.columns[taskToEdit!.status].taskIds;
+				prevStatusNewTaskIds = prevStatusNewTaskIds.filter((id) => id !== task.id);
+				prevNewColumn = { ...state.columns[taskToEdit!.status], taskIds: prevStatusNewTaskIds };
+				if (user) {
+					fetch("/api/tasks/update-task", {
+						method: "PUT",
+						body: JSON.stringify({ ...task, email: user && user.email }),
+					});
+				}
             }
             const newTasks = { ...state.tasks, [newTaskId!]: newTask };
             const newColumn = { ...state.columns[task.status], taskIds: newTasksIds };
             const newColumns = { ...state.columns, [task.status]: newColumn };
+			if (prevNewColumn) {
+				newColumns[taskToEdit!.status] = prevNewColumn;
+			}
             setState({ ...state, tasks: newTasks, columns: newColumns });
         } catch (error) {
             console.log(error);
