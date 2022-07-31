@@ -78,7 +78,7 @@ const Home: NextPage = () => {
 	const theme = useTheme();
   	const { user, error: userError, isLoading } = useUser();
 	const { data: tasks, error } = useSWR("/api/tasks/get-tasks", (url) =>
-        fetch(url, { method: "POST", body: JSON.stringify({ email: user && user.name }) }).then((res) => res.json())
+        fetch(url, { method: "POST", body: JSON.stringify({ email: user && user.email }) }).then((res) => res.json())
     );
 	const [state, setState] = useState(initialData);
 	const [loadingRequest, setLoadingRequest] = useState(false)
@@ -86,7 +86,7 @@ const Home: NextPage = () => {
 	const [requestError, setRequestError] = useState<unknown>(null);
 	const [createTaskModalOpen, setCreateTaskModalOpen] = useState(false);
 	const [taskToEdit, setTaskToEdit] = useState<Task | undefined>();
-
+	console.log(user)
 	useEffect(() => {
         if (tasks && tasks.tasksList && tasks.tasksList.items) {
             const tasksList = tasks.tasksList.items;
@@ -122,7 +122,7 @@ const Home: NextPage = () => {
 				const res = await fetch(`/api/create-user`, {
 					method: "POST",
 					body: JSON.stringify({
-						email: user && user.name,
+						email: user && user.email,
 					}),
 				});
 			} catch (error) {
@@ -166,7 +166,7 @@ const Home: NextPage = () => {
 				if (user) {
 					const response = await fetch("/api/tasks/create-task", {
 						method: "POST",
-						body: JSON.stringify({ ...task, email: user && user.name }),
+						body: JSON.stringify({ ...task, email: user && user.email}),
 					});
 					const { taskCreate } = await response.json();
 					newTaskId = taskCreate.id;
@@ -177,7 +177,7 @@ const Home: NextPage = () => {
 			} else if (user) {
 				fetch("/api/tasks/update-task", {
 					method: "PUT",
-					body: JSON.stringify({ ...task, email: user && user.name }),
+					body: JSON.stringify({ ...task, email: user && user.email}),
 				});
 			}
 			const newTasks = { ...state.tasks, [newTaskId!]: newTask };
@@ -261,7 +261,7 @@ const Home: NextPage = () => {
 		if (user) {
 			fetch(process.env.NEXT_PUBLIC_CLOUD_FUNCTION_ENDPOINT!, {
                 method: "POST",
-                body: JSON.stringify({ id: removed, status: destination.droppableId, email: user && user.name }),
+                body: JSON.stringify({ id: removed, status: destination.droppableId, email: user && user.email}),
             });
 		}
 		const newState = {
