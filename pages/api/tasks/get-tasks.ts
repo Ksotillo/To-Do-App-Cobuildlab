@@ -26,7 +26,7 @@ export default async function getTasks(req: NextApiRequest, res: NextApiResponse
         try {
             const { email } = JSON.parse(req.body);
             let result = await client.request(GET_TASKS(email));
-            console.log(result, "result");
+
             return res.status(200).json(result);
         } catch (error) {
             console.log(error);

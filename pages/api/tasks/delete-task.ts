@@ -17,7 +17,7 @@ export default async function createTask(req: NextApiRequest, res: NextApiRespon
         try {
             const { id } = JSON.parse(req.body);
             let result = await client.request(DELETE_TASKS(id));
-            console.log(result, "result");
+
             return res.status(200).json(result);
         } catch (error) {
             console.log(error);

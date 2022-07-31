@@ -15,10 +15,10 @@ export default async function createTask(req: NextApiRequest, res: NextApiRespon
     if (req.method === "POST") {
         try {
             let { tasks, email } = JSON.parse(req.body);
-            console.log(tasks)
+
             tasks = tasks.map((task: Task) => ({ content: task.content, status: task.status, user: { connect: { email } } }));
             let result = await client.request(CREATE_MANY_TASKS(tasks));
-            console.log(result, "result");
+
             return res.status(200).json(result);
         } catch (error) {
             console.log(error);

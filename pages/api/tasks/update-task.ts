@@ -26,7 +26,7 @@ export default async function updateTask(req: NextApiRequest, res: NextApiRespon
         try {
             const { email, content, status, id } = JSON.parse(req.body);
             let result = await client.request(UPDATE_TASKS(email, id, content, status));
-            console.log(result, "result");
+
             return res.status(200).json(result);
         } catch (error) {
             console.log(error);

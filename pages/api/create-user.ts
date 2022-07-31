@@ -31,7 +31,6 @@ export default async function createUser(req: NextApiRequest, res: NextApiRespon
             if (!user) {
                 result = await client.request(CREATE_USER(email));
             }
-            console.log(result);
             return res.status(200).json(result);
         } catch (error) {
             console.log(error);

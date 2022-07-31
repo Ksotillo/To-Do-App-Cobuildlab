@@ -26,7 +26,7 @@ export default async function createTask(req: NextApiRequest, res: NextApiRespon
         try {
             const { email, content, status } = JSON.parse(req.body);
             let result = await client.request(CREATE_TASKS(email, content, status));
-            console.log(result, "result");
+
             return res.status(200).json(result);
         } catch (error) {
             console.log(error);
