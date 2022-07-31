@@ -237,7 +237,12 @@ const Home: NextPage = () => {
 		};
 
 		const newTasks = { ...state.tasks, [removed]: { ...state.tasks[removed], status: destination.droppableId as Task["status"] } };
-
+		if (user) {
+			fetch(process.env.NEXT_PUBLIC_CLOUD_FUNCTION_ENDPOINT!, {
+                method: "POST",
+                body: JSON.stringify({ id: removed, status: destination.droppableId, email: user && user.name }),
+            });
+		}
 		const newState = {
 			...state,
 			tasks: newTasks,
