@@ -3,6 +3,7 @@ import { AppBar, Avatar, Box, Button, Grid, IconButton, Menu, MenuItem, Typograp
 import ThemeSwitch from "components/ThemeSwitch";
 import { useUser } from "@auth0/nextjs-auth0";
 import { ThemeMode, useAppContext } from "context/AppContext";
+import Link from "next/link";
 
 const TopBar = () => {
     const theme = useTheme();
@@ -46,19 +47,19 @@ const TopBar = () => {
                                 open={Boolean(anchorElUser)}
                                 onClose={handleCloseUserMenu}
                             >
-                                <a href="/api/auth/logout">
+                                <Link href="/api/auth/logout">
                                     <MenuItem onClick={handleCloseUserMenu}>
                                         <Typography textAlign="center">Logout</Typography>
                                     </MenuItem>
-                                </a>
+                                </Link>
                             </Menu>
                         </Box>
                     ) : (
-                        <a href="/api/auth/login">
+                        <Link href="/api/auth/login">
                             <Button sx={{ marginRight: theme.spacing(4) }} variant="contained">
                                 Login
                             </Button>
-                        </a>
+                        </Link>
                     )}
                     <ThemeSwitch isDark={theme.palette.mode === ThemeMode.dark} onChange={toggleColorMode} />
                 </Grid>
