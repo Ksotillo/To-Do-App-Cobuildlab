@@ -109,17 +109,30 @@ const Home: NextPage = () => {
     }, [tasks]);
 
 	useEffect(() => {
-		if (user) {
-			createUser()
-			mutate("/api/tasks/get-tasks");
-		}
-	}, [user])
+		const createUser = async () => {
+			try {
+				const res = await fetch(`/api/create-user`, {
+					method: "POST",
+					body: JSON.stringify({
+						email: user && user.name,
+					}),
+				});
+			} catch (error) {
+				console.log(error);
+				setRequestError(error);
+			}
+		};
+        if (user) {
+            createUser();
+            mutate("/api/tasks/get-tasks");
+        }
+    }, [user]);
 
 	useEffect(() => {
 		if (!user) {
 			localStorage.setItem("tasks", JSON.stringify(state.tasks))
 		}
-	}, [state.tasks])
+	}, [state.tasks, user])
 
 	useEffect(() => {
 		if (error) setRequestError(error)
@@ -256,19 +269,6 @@ const Home: NextPage = () => {
 		setState(newState);
 	};
 
-	const createUser = async () => {
-		try {
-			const res = await fetch(`/api/create-user`, {
-				method: "POST",
-				body: JSON.stringify({
-					email: user && user.name,
-				}),
-			});
-		} catch (error) {
-			console.log(error)
-			setRequestError(error);
-		}
-	}
 
 	return (
         <Box>
